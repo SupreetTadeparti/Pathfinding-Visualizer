@@ -21,7 +21,7 @@ const visualizerRows = 21;
 const visualizerColumns = 50;
 const messagesDiv = document.querySelector(".messages");
 const navbarToggle = document.querySelector(".navbar-toggle__icon");
-let selectedAlgorithm = "A* Search";
+let selectedAlgorithm = "A*";
 let selectedDistance = "Manhattan";
 let activeNodeType = "Start";
 let startNode = null;
@@ -182,7 +182,7 @@ async function aStar(currNode, open, closed) {
     }
   }
 
-  await sleep(10);
+  await sleep();
 
   if (optimalNode === null) return -1;
 
@@ -197,6 +197,103 @@ async function aStar(currNode, open, closed) {
   }
 
   return aStar(optimalNode, open, closed);
+}
+
+function getAdjacentNodes(node) {
+  return [
+    visualizer.querySelector(
+      `[row="${parseInt(node.getAttribute("row")) - 1}"][col="${parseInt(
+        node.getAttribute("col")
+      )}"]`
+    ),
+    visualizer.querySelector(
+      `[row="${parseInt(node.getAttribute("row"))}"][col="${
+        parseInt(node.getAttribute("col")) - 1
+      }"]`
+    ),
+    visualizer.querySelector(
+      `[row="${parseInt(node.getAttribute("row"))}"][col="${
+        parseInt(node.getAttribute("col")) + 1
+      }"]`
+    ),
+    visualizer.querySelector(
+      `[row="${parseInt(node.getAttribute("row")) + 1}"][col="${parseInt(
+        node.getAttribute("col")
+      )}"]`
+    ),
+  ];
+}
+
+async function dijkstra() {
+  for (const node of visualizer.querySelectorAll(".col")) {
+    node.setAttribute("distance", Infinity);
+    node.setAttribute("unexplored", true);
+    successorObject[node.getAttribute("row") + " " + node.getAttribute("col")] =
+      null;
+  }
+
+  startNode.setAttribute("distance", 0);
+
+  let finalNode = endNode;
+
+  mainloop: while (true) {
+    let v = null;
+    let vDist = Infinity;
+    for (const node of visualizer.querySelectorAll(".col")) {
+      if (node.getAttribute("unexplored") === "false") continue;
+      if (parseInt(node.getAttribute("distance")) < vDist) {
+        vDist = node.getAttribute("distance");
+        v = node;
+      }
+    }
+
+    if (v === null) {
+      return -1;
+    }
+
+    if (v !== startNode) v.style.backgroundColor = "orange";
+    v.setAttribute("unexplored", false);
+
+    for (const node of getAdjacentNodes(v).filter(
+      (el) => el !== null && el.style.backgroundColor !== "gray"
+    )) {
+      if (
+        successorObject[
+          node.getAttribute("row") + " " + node.getAttribute("col")
+        ] === null ||
+        parseInt(node.getAttribute("distance")) >
+          parseInt(v.getAttribute("distance")) + 1
+      ) {
+        node.setAttribute("distance", parseInt(v.getAttribute("distance")) + 1);
+        successorObject[
+          node.getAttribute("row") + " " + node.getAttribute("col")
+        ] = v;
+      }
+
+      if (node === endNode) break mainloop;
+
+      if (node.style.backgroundColor !== "orange" && node !== startNode) {
+        node.style.backgroundColor = "#4FFFB0";
+      }
+    }
+
+    await sleep();
+  }
+
+  let shortestRoute = [];
+
+  while (finalNode !== startNode) {
+    if (finalNode !== endNode) shortestRoute.push(finalNode);
+    finalNode =
+      successorObject[
+        finalNode.getAttribute("row") + " " + finalNode.getAttribute("col")
+      ];
+  }
+
+  for (const node of shortestRoute.reverse()) {
+    node.style.backgroundColor = "purple";
+    await sleep(10);
+  }
 }
 
 function createMessage(msg) {
@@ -221,16 +318,26 @@ startBtn.addEventListener("click", async function () {
       createMessage("Please select an algorithm");
     }
   } else {
-    if (selectedAlgorithm === "A* Search") {
-      if (startNode === null || endNode === null) {
-        createMessage("Please place the start node and end node");
-      } else {
-        let open = [];
-        let closed = [];
+    if (startNode === null || endNode === null) {
+      createMessage("Please place the start node and end node");
+      return;
+    }
+    if (selectedAlgorithm === "A*") {
+      let open = [];
+      let closed = [];
 
-        if ((await aStar(startNode, open, closed)) === -1) {
-          createMessage("Cannot find a route, please remove some walls");
+      if ((await aStar(startNode, open, closed)) === -1) {
+        createMessage("Cannot find a route, please remove some walls");
+      }
+    } else if (selectedAlgorithm === "Dijkstra") {
+      for (const node of visualizer.querySelectorAll(".col")) {
+        if (node !== startNode) {
+          node.setAttribute("distance", Infinity);
         }
+      }
+
+      if ((await dijkstra()) === -1) {
+        createMessage("Cannot find a route, please remove some walls");
       }
     }
   }

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <title>PVAF</title>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <div class="level-1"><div class="logo">Algorithm Visualizer</div><div class="about">About</div></div>
+            <div class="level-2">
+                <div class="algorithms dropdown-container">
+                    <div class="algorithms__heading dropdown-heading" tabindex="0">
+                        <span>A*</span>
+                        <div class="algorithms__heading__arrow dropdown-arrow"></div>
+                        <div class="algorithms__dropdown dropdown" tabindex="0">
+                            <div class="algorithm a-star active dropdown__option">A*</div>
+                            <div class="algorithm djikstra dropdown__option">Djikstra</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="distances dropdown-container">
+                    <div class="distances__heading dropdown-heading" tabindex="0">
+                        <span>Manhattan</span>
+                        <div class="distances__heading__arrow dropdown-arrow"></div>
+                        <div class="distances__dropdown dropdown" tabindex="0">
+                            <div class="distance manhattan-distance dropdown__option active">Manhattan</div>
+                            <div class="distance euclidean-distance droppdown__option">Euclidean</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clear-btn-container">
+                    <div class="clear-btn btn">Clear</div>
+                </div>
+                <div class="start-btn-container">
+                    <div class="start-btn btn">Start</div>
+                </div>
+                <div class="clear-walls-btn-container">
+                    <div class="clear-walls-btn btn">Clear Walls</div>
+                </div>
+                <div class="reset-btn-container">
+                    <div class="reset-btn btn">Reset</div>
+                </div>
+                <div class="navbar-toggle" tabindex="0">
+                    <div class="navbar-toggle__icon">
+                        <div class="navbar-toggle__icon__line"></div>
+                        <div class="navbar-toggle__icon__line"></div>
+                        <div class="navbar-toggle__icon__line"></div>
+                    </div>
+                    <div class="navbar-toggle__nav-items">
+                        <div class="algorithms">
+                            <div class="algorithms__heading" tabindex="0">
+                                <span>A* Search</span>
+                                <div class="algorithms__heading__arrow"></div>
+                                <div class="algorithms__dropdown dropdown" tabindex="0">
+                                    <div class="algorithm a-star active">A* Search</div>
+                                    <div class="algorithm djikstra">Djikstra Algorithm</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clear-btn-container">
+                            <div class="clear-btn btn">Clear</div>
+                        </div>
+                        <div class="clear-walls-btn-container">
+                            <div class="clear-walls-btn btn">Clear Walls</div>
+                        </div>
+                        <div class="reset-btn-container">
+                            <div class="reset-btn btn">Reset</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="node-type-selector">
+                <div class="wall-node node">
+                    <div class="wall-node__name node-name">Wall</div>
+                    <div class="wall-node__color node-color"></div>
+                </div>
+                <div class="start-node node active">
+                    <div class="start-node__name node-name">Start</div>
+                    <div class="start-node__color node-color"></div>
+                </div>
+                <div class="end-node node">
+                    <div class="end-node__name node-name">End</div>
+                    <div class="end-node__color node-color"></div>
+                </div>
+            </div>
+            <table class="visualizer">
+                
+            </table>
+        </div>
+    </div>
+    <div class="messages">
+        
+    </div>
+    <div id="copyright">&copy;2021 Potato Inc</div>
+    <script src="./index.js"></script>
+</body>
+</html>

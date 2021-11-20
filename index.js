@@ -141,23 +141,27 @@ async function aStar() {
   while (open.length > 0) {
     
     let leastFX = Infinity;
+    let leastGX = Infinity;
     let currentNode = null;
 
     // get node with lowest fx in open list
     for (const node of open) {
       let hX = manhattanDistance(node, endNode);
-      let fX = parseInt(node.getAttribute('gX') + hX);
+      let fX = parseInt(node.getAttribute('gX')) + hX;
       if (fX < leastFX) {
         leastFX = fX;
         currentNode = node;
+      } else if (fX === leastFX) {
+        if (parseInt(node.getAttribute('gX')) > parseInt(currentNode.getAttribute('gX'))) {
+          leastFX = fX;
+          currentNode = node;
+        }
       }
     }
 
     if (currentNode === endNode) {
       break;
     }
-
-    currentNode.style.backgroundColor = 'orange';
 
     let nodesAround = getNodesAround(currentNode.getAttribute('row'), currentNode.getAttribute('col'));
 
@@ -177,10 +181,20 @@ async function aStar() {
         open.push(node);
         node.setAttribute('hX', manhattanDistance(node, endNode));
       }
+
+      if (node !== endNode && node.style.backgroundColor != "gray") {
+        node.style.backgroundColor = "#4FFFB0";
+      }
+
       node.setAttribute('gX', gX);
       successorObject[node.getAttribute('row') + ' ' + node.getAttribute('col')] = currentNode;
     }
+
     closed.push(currentNode);
+
+    if (currentNode !== startNode) {
+      currentNode.style.backgroundColor = 'orange';
+    }
 
     await sleep();
   }
@@ -260,7 +274,7 @@ async function dijkstra() {
       if (node === endNode) break mainloop;
 
       if (node.style.backgroundColor !== "orange" && node !== startNode) {
-        node.style.backgroundColor = "#4FFFB0";
+        node.style.backgroundColor = "#";
       }
     }
 

@@ -5,14 +5,9 @@ const clearBtn = document.querySelector(".clear-btn");
 const clearWallsBtn = document.querySelector(".clear-walls-btn");
 const resetBtn = document.querySelector(".reset-btn");
 const algorithms = document.querySelectorAll(".algorithm");
-// const algorithmsDiv = document.querySelector(".algorithms");
 const algorithmSpan = document
   .querySelector(".algorithms__heading")
   .querySelector("span");
-// const algorithmDropdown = document.querySelector(".algorithms__dropdown");
-// const algorithmDropdownArrow = document.querySelector(
-//   ".algorithms__heading__arrow"
-// );
 const distances = document.querySelectorAll(".distance");
 const distanceSpan = document
   .querySelector(".distances__heading")
@@ -134,69 +129,61 @@ async function drawShortestPath(current) {
   }
 }
 
-async function aStar(currNode, open, closed) {
-  for (const node of getNodesAround(
-    currNode.getAttribute("row"),
-    currNode.getAttribute("col")
-  )) {
-    if (node != null) {
-      if (!closed.includes(node)) {
+async function aStar() {
+  let open = [];
+  let closed = [];
+  
+  startNode.setAttribute('gX', 0);
+  startNode.setAttribute('fX', manhattanDistance(startNode, endNode));
+
+  open.push(startNode);
+
+  while (open.length > 0) {
+    
+    let leastFX = Infinity;
+    let currentNode = null;
+
+    // get node with lowest fx in open list
+    for (const node of open) {
+      let hX = manhattanDistance(node, endNode);
+      let fX = parseInt(node.getAttribute('gX') + hX);
+      if (fX < leastFX) {
+        leastFX = fX;
+        currentNode = node;
+      }
+    }
+
+    if (currentNode === endNode) {
+      break;
+    }
+
+    currentNode.style.backgroundColor = 'orange';
+
+    let nodesAround = getNodesAround(currentNode.getAttribute('row'), currentNode.getAttribute('col'));
+
+    for (const node of nodesAround) {
+
+      if (node === null) continue;
+
+      let gX = parseInt(currentNode.getAttribute('gX')) + 1;
+
+      if (open.includes(node)) {
+        if (parseInt(node.getAttribute('gX')) <= gX) continue;
+      } else if (closed.includes(node)) {
+        if (parseInt(node.getAttribute('gX')) <= gX) continue;
+        open = open.filter(el => el != node);
+        closed.push(node);
+      } else {
         open.push(node);
+        node.setAttribute('hX', manhattanDistance(node, endNode));
       }
-      let nodeKey = node.getAttribute("row") + " " + node.getAttribute("col");
-      if (!(nodeKey in successorObject)) {
-        successorObject[nodeKey] = currNode;
-      }
+      node.setAttribute('gX', gX);
+      successorObject[node.getAttribute('row') + ' ' + node.getAttribute('col')] = currentNode;
     }
+    closed.push(currentNode);
+
+    await sleep();
   }
-
-  open = open.filter(
-    (el) => !closed.includes(el) && el.style.backgroundColor != "gray"
-  );
-
-  let leastFX = 100000;
-  let leastGX = 100000;
-  optimalNode = null;
-
-  for (const node of open) {
-    if (node != startNode && node != endNode) {
-      node.style.backgroundColor = "#4FFFB0";
-    }
-    let gX, hX;
-    if (selectedDistance === "Manhattan") {
-      gX = manhattanDistance(node, startNode);
-      hX = manhattanDistance(node, endNode);
-    } else if (selectedDistance === "Euclidean") {
-      gX = euclideanDistance(node, startNode);
-      hX = euclideanDistance(node, endNode);
-    }
-    let fX = gX + hX;
-    if (fX < leastFX) {
-      leastFX = fX;
-      optimalNode = node;
-    } else if (fX === leastFX) {
-      if (gX < leastGX) {
-        optimalNode = node;
-        leastGX = gX;
-      }
-    }
-  }
-
-  await sleep();
-
-  if (optimalNode === null) return -1;
-
-  if (optimalNode !== startNode && optimalNode !== endNode)
-    optimalNode.style.backgroundColor = "orange";
-
-  closed.push(optimalNode);
-
-  if (optimalNode === endNode) {
-    drawShortestPath(endNode);
-    return;
-  }
-
-  return aStar(optimalNode, open, closed);
 }
 
 function getAdjacentNodes(node) {
@@ -323,19 +310,10 @@ startBtn.addEventListener("click", async function () {
       return;
     }
     if (selectedAlgorithm === "A*") {
-      let open = [];
-      let closed = [];
-
-      if ((await aStar(startNode, open, closed)) === -1) {
+      if ((await aStar()) === -1) {
         createMessage("Cannot find a route, please remove some walls");
       }
     } else if (selectedAlgorithm === "Dijkstra") {
-      for (const node of visualizer.querySelectorAll(".col")) {
-        if (node !== startNode) {
-          node.setAttribute("distance", Infinity);
-        }
-      }
-
       if ((await dijkstra()) === -1) {
         createMessage("Cannot find a route, please remove some walls");
       }

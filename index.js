@@ -16,12 +16,13 @@ const visualizerRows = 21;
 const visualizerColumns = 50;
 const messagesDiv = document.querySelector(".messages");
 const navbarToggle = document.querySelector(".navbar-toggle__icon");
+const cols = [];
 let selectedAlgorithm = "A*";
 let selectedDistance = "Manhattan";
 let activeNodeType = "Start";
 let startNode = null;
 let endNode = null;
-let routeNodes = [];
+let running = false;
 let successorObject = {};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -70,133 +71,10 @@ function loadGrid() {
           this.style.backgroundColor = "red";
         }
       });
+      cols.push(col);
       row.appendChild(col);
     }
     visualizer.appendChild(row);
-  }
-}
-
-function getNodesAround(row, col) {
-  return [
-    document.querySelector(
-      `[row="${parseInt(row) - 1}"][col="${parseInt(col)}"]`
-    ),
-    document.querySelector(
-      `[row="${parseInt(row)}"][col="${parseInt(col) - 1}"]`
-    ),
-    document.querySelector(
-      `[row="${parseInt(row)}"][col="${parseInt(col) + 1}"]`
-    ),
-    document.querySelector(
-      `[row="${parseInt(row) + 1}"][col="${parseInt(col)}"]`
-    ),
-  ];
-}
-
-function distanceBetween(a, b) {
-  return (
-    Math.abs(a.getAttribute("col") - b.getAttribute("col")) +
-    Math.abs(a.getAttribute("row") - b.getAttribute("row"))
-  );
-}
-
-function euclideanDistance(a, b) {
-  return Math.sqrt(
-    Math.pow(a.getAttribute("row") - b.getAttribute("row"), 2) +
-      Math.pow(a.getAttribute("col") - b.getAttribute("col"), 2)
-  );
-}
-
-function manhattanDistance(a, b) {
-  return (
-    Math.abs(a.getAttribute("col") - b.getAttribute("col")) +
-    Math.abs(a.getAttribute("row") - b.getAttribute("row"))
-  );
-}
-
-function getKey(node) {
-  return node.getAttribute("row") + " " + node.getAttribute("col");
-}
-
-async function drawShortestPath(current) {
-  currentKey = getKey(current);
-  while (successorObject.hasOwnProperty(currentKey)) {
-    current = successorObject[currentKey];
-    currentKey = getKey(current);
-    if (current === startNode) break;
-    current.style.backgroundColor = "purple";
-    await sleep(10);
-  }
-}
-
-async function aStar() {
-  let open = [];
-  let closed = [];
-  
-  startNode.setAttribute('gX', 0);
-  startNode.setAttribute('fX', manhattanDistance(startNode, endNode));
-
-  open.push(startNode);
-
-  while (open.length > 0) {
-    
-    let leastFX = Infinity;
-    let leastGX = Infinity;
-    let currentNode = null;
-
-    // get node with lowest fx in open list
-    for (const node of open) {
-      let hX = manhattanDistance(node, endNode);
-      let fX = parseInt(node.getAttribute('gX')) + hX;
-      if (fX < leastFX) {
-        leastFX = fX;
-        currentNode = node;
-      } else if (fX === leastFX) {
-        if (parseInt(node.getAttribute('gX')) > parseInt(currentNode.getAttribute('gX'))) {
-          leastFX = fX;
-          currentNode = node;
-        }
-      }
-    }
-
-    if (currentNode === endNode) {
-      break;
-    }
-
-    let nodesAround = getNodesAround(currentNode.getAttribute('row'), currentNode.getAttribute('col'));
-
-    for (const node of nodesAround) {
-
-      if (node === null) continue;
-
-      let gX = parseInt(currentNode.getAttribute('gX')) + 1;
-
-      if (open.includes(node)) {
-        if (parseInt(node.getAttribute('gX')) <= gX) continue;
-      } else if (closed.includes(node)) {
-        if (parseInt(node.getAttribute('gX')) <= gX) continue;
-        open = open.filter(el => el != node);
-        closed.push(node);
-      } else {
-        open.push(node);
-        node.setAttribute('hX', manhattanDistance(node, endNode));
-      }
-
-      if (node !== endNode && node.style.backgroundColor != "gray") {
-        node.style.backgroundColor = "#4FFFB0";
-      }
-
-      node.setAttribute('gX', gX);
-      successorObject[node.getAttribute('row') + ' ' + node.getAttribute('col')] = currentNode;
-    }
-
-    closed.push(currentNode);
-
-    if (currentNode !== startNode) {
-      currentNode.style.backgroundColor = 'orange';
-    }
-
-    await sleep();
   }
 }
 
@@ -223,6 +101,123 @@ function getAdjacentNodes(node) {
       )}"]`
     ),
   ];
+}
+
+function euclideanDistance(a, b) {
+  return Math.sqrt(
+    Math.pow(a.getAttribute("row") - b.getAttribute("row"), 2) +
+      Math.pow(a.getAttribute("col") - b.getAttribute("col"), 2)
+  );
+}
+
+function manhattanDistance(a, b) {
+  return (
+    Math.abs(a.getAttribute("col") - b.getAttribute("col")) +
+    Math.abs(a.getAttribute("row") - b.getAttribute("row"))
+  );
+}
+
+function getKey(node) {
+  return node.getAttribute("row") + " " + node.getAttribute("col");
+}
+
+async function aStar() {
+  let open = [];
+  let closed = [];
+  
+  let startNodeGX = 0;
+  let startNodeHX = manhattanDistance(startNode, endNode);
+  let startNodeFX = startNodeGX + startNodeHX;
+
+  startNode.setAttribute('gX', startNodeGX);
+  startNode.setAttribute('hX', startNodeHX);
+  startNode.setAttribute('fX', startNodeFX);
+
+  open.push(startNode);
+
+  let currentNode;
+
+  while (open.length > 0) {
+    
+    let leastFX = Infinity;
+    currentNode = null;
+
+    // get node with lowest fx in open list
+    for (const node of open) {
+      let fX = parseInt(node.getAttribute('gX')) + parseInt(node.getAttribute('hX'));
+      if (fX < leastFX) {
+        leastFX = fX;
+        currentNode = node;
+      } else if (fX === leastFX) {
+        if (parseInt(node.getAttribute('gX')) > parseInt(currentNode.getAttribute('gX'))) {
+          leastFX = fX;
+          currentNode = node;
+        }
+      }
+    }
+
+    if (currentNode === endNode) {
+      break;
+    }
+
+    let nodesAround = getAdjacentNodes(currentNode);
+
+    for (const node of nodesAround) {
+
+      if (node === null || node.style.backgroundColor === "gray") continue;
+
+      let gX = parseInt(currentNode.getAttribute('gX')) + 1;
+
+      if (open.includes(node)) {
+        if (parseInt(node.getAttribute('gX')) <= gX) continue;
+      } else if (closed.includes(node)) {
+        if (parseInt(node.getAttribute('gX')) <= gX) continue;
+        closed = closed.filter(el => el != node);
+        open.push(node);
+      } else {
+        open.push(node);
+        if (selectedDistance === "Manhattan") {
+          node.setAttribute('hX', manhattanDistance(node, endNode));
+        } else if (selectedDistance === "Euclidean") {
+          node.setAttribute('hX', euclideanDistance(node, endNode));
+        }
+      }
+
+      if (node !== endNode && node.style.backgroundColor != "gray") {
+        node.style.backgroundColor = "#4FFFB0";
+      }
+
+      node.setAttribute('gX', gX);
+      successorObject[getKey(node)] = currentNode;
+    }
+
+    open = open.filter(el => el !== currentNode);
+    closed.push(currentNode);
+
+    if (currentNode !== startNode) {
+      currentNode.style.backgroundColor = 'orange';
+    }
+
+    await sleep();
+  }
+
+  if (currentNode !== endNode) {
+    return -1;
+  }
+
+  let routeNodes = [];
+
+  while (true) {
+    currentNode = successorObject[getKey(currentNode)];
+    if (currentNode === startNode) break;
+    routeNodes.push(currentNode);
+  }
+
+  for (const node of routeNodes.reverse()) {
+    node.style.backgroundColor = 'purple';
+    await sleep(10);
+  }
+
 }
 
 async function dijkstra() {
@@ -274,7 +269,7 @@ async function dijkstra() {
       if (node === endNode) break mainloop;
 
       if (node.style.backgroundColor !== "orange" && node !== startNode) {
-        node.style.backgroundColor = "#";
+        node.style.backgroundColor = "#4FFFB0";
       }
     }
 
@@ -295,6 +290,51 @@ async function dijkstra() {
     node.style.backgroundColor = "purple";
     await sleep(10);
   }
+}
+
+async function bellmanFord() {
+
+  let distance = {};
+  let previous = {};
+
+  for (const node of cols) {
+    distance[getKey(node)] = Infinity;
+    previous[getKey(node)] = null;
+  }
+
+  distance[getKey(startNode)] = 0;
+
+  for (let i = 0; i < cols.length - 1; i++) {
+    for (const n1 of cols) {
+
+      if (n1 === null) continue;
+
+      let adjacentNodes = getAdjacentNodes(n1);
+      
+      for (const n2 of adjacentNodes) {
+        if (n2 === null) continue;
+        let tempDistance = distance[getKey(n1)] + 1;
+        if(tempDistance < distance[getKey(n2)]) {
+          distance[getKey(n2)] = tempDistance;
+          previous[getKey(n2)] = n1;
+        }
+      }
+
+      n1.style.backgroundColor = 'orange';
+    
+      await sleep();
+    }
+  }
+
+  for (const n1 of cols) {
+    for (const n2 of cols) {
+      if (distance[getKey(n1)] + 1 < distance[getKey(n2)]) {
+        createMessage("Negative Cycle Exists");
+        return;
+      }
+    }
+  }
+
 }
 
 function createMessage(msg) {
@@ -329,6 +369,10 @@ startBtn.addEventListener("click", async function () {
       }
     } else if (selectedAlgorithm === "Dijkstra") {
       if ((await dijkstra()) === -1) {
+        createMessage("Cannot find a route, please remove some walls");
+      }
+    } else if (selectedAlgorithm === "Bellman Ford") {
+      if ((await bellmanFord()) === -1) {
         createMessage("Cannot find a route, please remove some walls");
       }
     }

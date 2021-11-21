@@ -292,51 +292,6 @@ async function dijkstra() {
   }
 }
 
-async function bellmanFord() {
-
-  let distance = {};
-  let previous = {};
-
-  for (const node of cols) {
-    distance[getKey(node)] = Infinity;
-    previous[getKey(node)] = null;
-  }
-
-  distance[getKey(startNode)] = 0;
-
-  for (let i = 0; i < cols.length - 1; i++) {
-    for (const n1 of cols) {
-
-      if (n1 === null) continue;
-
-      let adjacentNodes = getAdjacentNodes(n1);
-      
-      for (const n2 of adjacentNodes) {
-        if (n2 === null) continue;
-        let tempDistance = distance[getKey(n1)] + 1;
-        if(tempDistance < distance[getKey(n2)]) {
-          distance[getKey(n2)] = tempDistance;
-          previous[getKey(n2)] = n1;
-        }
-      }
-
-      n1.style.backgroundColor = 'orange';
-    
-      await sleep();
-    }
-  }
-
-  for (const n1 of cols) {
-    for (const n2 of cols) {
-      if (distance[getKey(n1)] + 1 < distance[getKey(n2)]) {
-        createMessage("Negative Cycle Exists");
-        return;
-      }
-    }
-  }
-
-}
-
 function createMessage(msg) {
   let message = document.createElement("div");
   message.classList.add("message");

@@ -1,9 +1,9 @@
 const visualizer = document.querySelector(".visualizer");
 const nodeTypes = document.querySelectorAll(".node");
 const startBtn = document.querySelector(".start-btn");
-const clearBtn = document.querySelector(".clear-btn");
-const clearWallsBtn = document.querySelector(".clear-walls-btn");
-const resetBtn = document.querySelector(".reset-btn");
+const clearBtns = document.querySelectorAll(".clear-btn");
+const clearWallsBtns = document.querySelectorAll(".clear-walls-btn");
+const resetBtns = document.querySelectorAll(".reset-btn");
 const algorithms = document.querySelectorAll(".algorithm");
 const algorithmSpan = document
   .querySelector(".algorithms__heading")
@@ -12,8 +12,8 @@ const distances = document.querySelectorAll(".distance");
 const distanceSpan = document
   .querySelector(".distances__heading")
   .querySelector("span");
-const visualizerRows = 21;
-const visualizerColumns = 50;
+const visualizerRows = 20;
+const visualizerColumns = document.body.offsetWidth / 25;
 const messagesDiv = document.querySelector(".messages");
 const navbarToggle = document.querySelector(".navbar-toggle__icon");
 const cols = [];
@@ -124,32 +124,35 @@ function getKey(node) {
 async function aStar() {
   let open = [];
   let closed = [];
-  
+
   let startNodeGX = 0;
   let startNodeHX = manhattanDistance(startNode, endNode);
   let startNodeFX = startNodeGX + startNodeHX;
 
-  startNode.setAttribute('gX', startNodeGX);
-  startNode.setAttribute('hX', startNodeHX);
-  startNode.setAttribute('fX', startNodeFX);
+  startNode.setAttribute("gX", startNodeGX);
+  startNode.setAttribute("hX", startNodeHX);
+  startNode.setAttribute("fX", startNodeFX);
 
   open.push(startNode);
 
   let currentNode;
 
   while (open.length > 0) {
-    
     let leastFX = Infinity;
     currentNode = null;
 
     // get node with lowest fx in open list
     for (const node of open) {
-      let fX = parseInt(node.getAttribute('gX')) + parseInt(node.getAttribute('hX'));
+      let fX =
+        parseInt(node.getAttribute("gX")) + parseInt(node.getAttribute("hX"));
       if (fX < leastFX) {
         leastFX = fX;
         currentNode = node;
       } else if (fX === leastFX) {
-        if (parseInt(node.getAttribute('gX')) > parseInt(currentNode.getAttribute('gX'))) {
+        if (
+          parseInt(node.getAttribute("gX")) >
+          parseInt(currentNode.getAttribute("gX"))
+        ) {
           leastFX = fX;
           currentNode = node;
         }
@@ -163,23 +166,22 @@ async function aStar() {
     let nodesAround = getAdjacentNodes(currentNode);
 
     for (const node of nodesAround) {
-
       if (node === null || node.style.backgroundColor === "gray") continue;
 
-      let gX = parseInt(currentNode.getAttribute('gX')) + 1;
+      let gX = parseInt(currentNode.getAttribute("gX")) + 1;
 
       if (open.includes(node)) {
-        if (parseInt(node.getAttribute('gX')) <= gX) continue;
+        if (parseInt(node.getAttribute("gX")) <= gX) continue;
       } else if (closed.includes(node)) {
-        if (parseInt(node.getAttribute('gX')) <= gX) continue;
-        closed = closed.filter(el => el != node);
+        if (parseInt(node.getAttribute("gX")) <= gX) continue;
+        closed = closed.filter((el) => el != node);
         open.push(node);
       } else {
         open.push(node);
         if (selectedDistance === "Manhattan") {
-          node.setAttribute('hX', manhattanDistance(node, endNode));
+          node.setAttribute("hX", manhattanDistance(node, endNode));
         } else if (selectedDistance === "Euclidean") {
-          node.setAttribute('hX', euclideanDistance(node, endNode));
+          node.setAttribute("hX", euclideanDistance(node, endNode));
         }
       }
 
@@ -187,15 +189,15 @@ async function aStar() {
         node.style.backgroundColor = "#4FFFB0";
       }
 
-      node.setAttribute('gX', gX);
+      node.setAttribute("gX", gX);
       successorObject[getKey(node)] = currentNode;
     }
 
-    open = open.filter(el => el !== currentNode);
+    open = open.filter((el) => el !== currentNode);
     closed.push(currentNode);
 
     if (currentNode !== startNode) {
-      currentNode.style.backgroundColor = 'orange';
+      currentNode.style.backgroundColor = "orange";
     }
 
     await sleep();
@@ -214,10 +216,9 @@ async function aStar() {
   }
 
   for (const node of routeNodes.reverse()) {
-    node.style.backgroundColor = 'purple';
+    node.style.backgroundColor = "purple";
     await sleep(10);
   }
-
 }
 
 async function dijkstra() {
@@ -303,7 +304,7 @@ function createMessage(msg) {
 }
 
 startBtn.addEventListener("click", async function () {
-  clearBtn.click();
+  clearBtns[0].click();
   if (selectedAlgorithm === null) {
     if (messagesDiv.children.length > 0) {
       messagesDiv.children[0].classList.add("message-wiggle");
@@ -334,35 +335,41 @@ startBtn.addEventListener("click", async function () {
   }
 });
 
-clearBtn.addEventListener("click", function () {
-  for (const el of visualizer.querySelectorAll(".col")) {
-    if (
-      el.style.backgroundColor === "orange" ||
-      el.style.backgroundColor === "rgb(79, 255, 176)" ||
-      el.style.backgroundColor === "purple"
-    ) {
+for (const clearBtn of clearBtns) {
+  clearBtn.addEventListener("click", function () {
+    for (const el of visualizer.querySelectorAll(".col")) {
+      if (
+        el.style.backgroundColor === "orange" ||
+        el.style.backgroundColor === "rgb(79, 255, 176)" ||
+        el.style.backgroundColor === "purple"
+      ) {
+        el.style.backgroundColor = "white";
+      }
+    }
+    successorObject = {};
+  });
+}
+
+for (const clearWallsBtn of clearWallsBtns) {
+  clearWallsBtn.addEventListener("click", function () {
+    for (const el of visualizer.querySelectorAll(".col")) {
+      if (el.style.backgroundColor === "gray") {
+        el.style.backgroundColor = "white";
+      }
+    }
+  });
+}
+
+for (const resetBtn of resetBtns) {
+  resetBtn.addEventListener("click", function () {
+    for (const el of visualizer.querySelectorAll(".col")) {
       el.style.backgroundColor = "white";
     }
-  }
-  successorObject = {};
-});
-
-clearWallsBtn.addEventListener("click", function () {
-  for (const el of visualizer.querySelectorAll(".col")) {
-    if (el.style.backgroundColor === "gray") {
-      el.style.backgroundColor = "white";
-    }
-  }
-});
-
-resetBtn.addEventListener("click", function () {
-  for (const el of visualizer.querySelectorAll(".col")) {
-    el.style.backgroundColor = "white";
-  }
-  startNode = null;
-  endNode = null;
-  successorObject = {};
-});
+    startNode = null;
+    endNode = null;
+    successorObject = {};
+  });
+}
 
 for (const algorithm of algorithms) {
   algorithm.addEventListener("click", function () {

@@ -320,7 +320,7 @@ body {
 
 @media screen and (max-width: 500px) {
   .logo {
-    font-size: 7.5vw !important;
+    font-size: 5vw !important;
   }
 
   .about {
